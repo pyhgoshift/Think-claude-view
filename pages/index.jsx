@@ -67,9 +67,19 @@ const tasksData = [
     }
 ];
 
+const BACKEND_API = process.env.NEXT_PUBLIC_BACKEND_API || 'http://localhost:5000';
+
 export default function Dashboard() {
     const [currentSection, setCurrentSection] = useState('home');
     const [currentFilter, setCurrentFilter] = useState('all');
+    const [domains, setDomains] = useState([]);
+    const [domainName, setDomainName] = useState('');
+    const [extension, setExtension] = useState('.dpdns.org');
+    const [queryDomain, setQueryDomain] = useState('');
+    const [queryResult, setQueryResult] = useState(null);
+    const [dnsRecords, setDnsRecords] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
 
     const total = tasksData.length;
     const completed = tasksData.filter(t => t.status === 'completed').length;
@@ -98,6 +108,85 @@ export default function Dashboard() {
         return classes[status] || '';
     };
 
+    const registerDomain = async () => {
+        if (!domainName.trim()) {
+            setMessage('도메인명을 입력해주세요.');
+            return;
+        }
+        setLoading(true);
+        setMessage('');
+        try {
+            const response = await fetch(`${BACKEND_API}/api/domain/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ domain_name: domainName, extension })
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setMessage(`성공: ${domainName}${extension} 도메인이 등록되었습니다.`);
+                setDomainName('');
+                loadDomains();
+            } else {
+                setMessage(`오류: ${data.error?.message || '등록 실패'}`);
+            }
+        } catch (error) {
+            setMessage(`연결 오류: ${error.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const queryDomainInfo = async () => {
+        if (!queryDomain.trim()) {
+            setMessage('도메인명을 입력해주세요.');
+            return;
+        }
+        setLoading(true);
+        setMessage('');
+        try {
+            const response = await fetch(`${BACKEND_API}/api/domain/query?domain=${queryDomain}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setQueryResult(data.domain_info);
+                setMessage('조회 완료');
+            } else {
+                setMessage(`오류: ${data.error?.message || '조회 실패'}`);
+                setQueryResult(null);
+            }
+        } catch (error) {
+            setMessage(`연결 오류: ${error.message}`);
+            setQueryResult(null);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadDomains = async () => {
+        setLoading(true);
+        try {
+            const response = await fetch(`${BACKEND_API}/api/domain/list`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setDomains(data.domains || []);
+                setMessage(`${data.domains?.length || 0}개의 도메인을 로드했습니다.`);
+            } else {
+                setMessage(`오류: ${data.error?.message || '로드 실패'}`);
+                setDomains([]);
+            }
+        } catch (error) {
+            setMessage(`연결 오류: ${error.message}`);
+            setDomains([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div style={styles.body}>
             <header style={styles.header}>
@@ -121,6 +210,15 @@ export default function Dashboard() {
                             onClick={() => setCurrentSection('stats')}
                         >
                             통계
+                        </a>
+                        <a
+                            style={{...styles.navLink, ...(currentSection === 'domain' ? styles.navLinkActive : {})}}
+                            onClick={() => {
+                                setCurrentSection('domain');
+                                loadDomains();
+                            }}
+                        >
+                            도메인 관리
                         </a>
                     </nav>
                 </div>
@@ -232,6 +330,94 @@ export default function Dashboard() {
                                 <div style={{...styles.progressFill, width: '0%'}}></div>
                             </div>
                             <p style={styles.progressText}>0/4 완료 (0%)</p>
+                        </div>
+                    </div>
+                )}
+
+                {currentSection === 'domain' && (
+                    <div style={styles.tasksContainer}>
+                        <h2 style={styles.h2}>도메인 관리</h2>
+                        {message && <div style={styles.messageBox}>{message}</div>}
+
+                        <div style={styles.tabContainer}>
+                            <button style={{...styles.tabBtn, ...styles.tabBtnActive}}>도메인 등록</button>
+                            <button style={styles.tabBtn}>도메인 조회</button>
+                            <button style={styles.tabBtn}>도메인 리스트</button>
+                            <button style={styles.tabBtn}>DNS 관리</button>
+                        </div>
+
+                        <div style={styles.formSection}>
+                            <h3 style={styles.subTitle}>새 도메인 등록</h3>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>도메인명</label>
+                                <input
+                                    type="text"
+                                    value={domainName}
+                                    onChange={(e) => setDomainName(e.target.value)}
+                                    placeholder="example"
+                                    style={styles.input}
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>확장자</label>
+                                <select value={extension} onChange={(e) => setExtension(e.target.value)} style={styles.input}>
+                                    <option value=".dpdns.org">.dpdns.org</option>
+                                    <option value=".us.kg">.us.kg</option>
+                                    <option value=".qzz.io">.qzz.io</option>
+                                    <option value=".xx.kg">.xx.kg</option>
+                                    <option value=".qd.je">.qd.je</option>
+                                </select>
+                            </div>
+                            <button style={styles.submitBtn} onClick={() => registerDomain()}>
+                                {loading ? '등록 중...' : '도메인 등록'}
+                            </button>
+                        </div>
+
+                        <div style={styles.formSection}>
+                            <h3 style={styles.subTitle}>도메인 조회</h3>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>도메인명</label>
+                                <input
+                                    type="text"
+                                    value={queryDomain}
+                                    onChange={(e) => setQueryDomain(e.target.value)}
+                                    placeholder="example.dpdns.org"
+                                    style={styles.input}
+                                />
+                            </div>
+                            <button style={styles.submitBtn} onClick={() => queryDomainInfo()}>
+                                {loading ? '조회 중...' : '조회'}
+                            </button>
+                            {queryResult && (
+                                <div style={styles.resultBox}>
+                                    <p><strong>도메인:</strong> {queryResult.domain}</p>
+                                    <p><strong>상태:</strong> {queryResult.status}</p>
+                                    <p><strong>등록일:</strong> {queryResult.registration_date}</p>
+                                    <p><strong>만료일:</strong> {queryResult.expiry_date}</p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={styles.formSection}>
+                            <h3 style={styles.subTitle}>내 도메인 목록</h3>
+                            <button style={styles.submitBtn} onClick={() => loadDomains()}>
+                                {loading ? '로드 중...' : '도메인 새로고침'}
+                            </button>
+                            {domains.length > 0 ? (
+                                <div style={styles.domainList}>
+                                    {domains.map((domain, idx) => (
+                                        <div key={idx} style={styles.domainItem}>
+                                            <div style={styles.domainName}>{domain.name}</div>
+                                            <div style={styles.domainMeta}>
+                                                <span>등록일: {domain.registration_date}</span>
+                                                <span>만료일: {domain.expiry_date}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p style={styles.emptyMessage}>등록된 도메인이 없습니다.</p>
+                            )}
                         </div>
                     </div>
                 )}
@@ -466,5 +652,109 @@ const styles = {
         color: 'white',
         padding: '20px',
         marginTop: '60px',
+    },
+    messageBox: {
+        padding: '12px 16px',
+        borderRadius: '6px',
+        marginBottom: '20px',
+        background: '#e8f5e9',
+        color: '#2e7d32',
+        border: '1px solid #81c784',
+    },
+    tabContainer: {
+        display: 'flex',
+        gap: '10px',
+        marginBottom: '30px',
+        borderBottom: '2px solid #eee',
+    },
+    tabBtn: {
+        padding: '10px 20px',
+        border: 'none',
+        background: 'white',
+        color: '#666',
+        cursor: 'pointer',
+        fontWeight: '500',
+        borderBottom: '3px solid transparent',
+        transition: 'all 0.3s',
+    },
+    tabBtnActive: {
+        color: '#667eea',
+        borderBottomColor: '#667eea',
+    },
+    formSection: {
+        marginBottom: '30px',
+        paddingBottom: '30px',
+        borderBottom: '1px solid #eee',
+    },
+    subTitle: {
+        fontSize: '18px',
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: '20px',
+        margin: 0,
+        marginBottom: '20px',
+    },
+    formGroup: {
+        marginBottom: '15px',
+    },
+    label: {
+        display: 'block',
+        fontSize: '14px',
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: '8px',
+    },
+    input: {
+        width: '100%',
+        padding: '10px 12px',
+        border: '1px solid #ddd',
+        borderRadius: '6px',
+        fontSize: '14px',
+        fontFamily: 'inherit',
+        boxSizing: 'border-box',
+    },
+    submitBtn: {
+        padding: '10px 24px',
+        background: '#667eea',
+        color: 'white',
+        border: 'none',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        fontWeight: '600',
+        transition: 'background 0.3s',
+    },
+    resultBox: {
+        marginTop: '20px',
+        padding: '16px',
+        background: '#f5f5f5',
+        borderRadius: '6px',
+        border: '1px solid #ddd',
+    },
+    domainList: {
+        marginTop: '20px',
+    },
+    domainItem: {
+        padding: '15px',
+        background: '#f9f9f9',
+        border: '1px solid #eee',
+        borderRadius: '6px',
+        marginBottom: '10px',
+    },
+    domainName: {
+        fontSize: '16px',
+        fontWeight: '600',
+        color: '#333',
+        marginBottom: '8px',
+    },
+    domainMeta: {
+        display: 'flex',
+        gap: '20px',
+        fontSize: '13px',
+        color: '#999',
+    },
+    emptyMessage: {
+        marginTop: '20px',
+        color: '#999',
+        textAlign: 'center',
     },
 };
