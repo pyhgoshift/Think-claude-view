@@ -83,6 +83,7 @@ export default function Dashboard() {
     const [pdfFile, setPdfFile] = useState(null);
     const [generatedCourse, setGeneratedCourse] = useState(null);
     const [courseLoading, setCourseLoading] = useState(false);
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
     const total = tasksData.length;
     const completed = tasksData.filter(t => t.status === 'completed').length;
@@ -222,10 +223,107 @@ export default function Dashboard() {
 
     return (
         <div style={styles.body}>
-            <header style={styles.header}>
-                <div style={styles.headerContent}>
-                    <div style={styles.logo}>🚀 PYHGOSHIFT</div>
-                    <nav style={styles.nav}>
+            <style>{`
+                @media (max-width: 768px) {
+                    body { margin: 0; padding: 0; }
+
+                    .header { padding: 15px 0 !important; }
+                    .navbar { display: flex !important; justify-content: space-between !important; align-items: center !important; }
+                    .logo { font-size: 18px !important; }
+                    .nav-desktop { display: none !important; }
+                    .nav-mobile { display: block !important; }
+                    .hamburger { background: none; border: none; font-size: 24px; cursor: pointer; color: #667eea; }
+
+                    .nav-menu {
+                        position: absolute;
+                        top: 60px;
+                        left: 0;
+                        right: 0;
+                        background: white;
+                        border-bottom: 1px solid #eee;
+                        flex-direction: column !important;
+                        gap: 0 !important;
+                        max-height: 0;
+                        overflow: hidden;
+                        transition: max-height 0.3s ease;
+                    }
+
+                    .nav-menu.open { max-height: 500px; }
+                    .nav-menu a { padding: 12px 20px !important; border-bottom: 1px solid #f0f0f0; }
+
+                    .container { padding: 15px 10px !important; margin: 0 auto !important; }
+                    .stats { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
+                    .hero { padding: 30px 20px !important; margin-bottom: 30px !important; }
+                    .hero h1 { font-size: 32px !important; }
+
+                    .tasksContainer { padding: 15px !important; margin-bottom: 20px !important; }
+                    .h2 { font-size: 20px !important; margin-bottom: 15px !important; }
+                    .subTitle { font-size: 16px !important; margin-bottom: 15px !important; }
+
+                    .taskFilter { gap: 6px !important; flex-wrap: wrap !important; }
+                    .filterBtn { padding: 6px 12px !important; font-size: 12px !important; }
+                    .input { padding: 8px 10px !important; font-size: 14px !important; }
+                    .submitBtn { padding: 8px 16px !important; font-size: 14px !important; min-width: auto !important; }
+
+                    .taskItem { padding: 12px !important; margin-bottom: 10px !important; }
+                    .taskTitle { font-size: 14px !important; }
+                    .taskDescription { font-size: 12px !important; }
+                    .taskHeader { flex-direction: column !important; align-items: flex-start !important; }
+                    .taskStatus { margin-top: 8px !important; }
+
+                    .formSection { padding: 15px 0 !important; margin-bottom: 20px !important; }
+                    .formGroup { margin-bottom: 12px !important; }
+                    .label { font-size: 13px !important; }
+
+                    .domainList { margin-top: 15px !important; }
+                    .domainItem { padding: 12px !important; margin-bottom: 8px !important; }
+                    .domainName { font-size: 14px !important; }
+                    .domainMeta { flex-direction: column !important; gap: 4px !important; font-size: 11px !important; }
+
+                    .messageBox { padding: 10px 12px !important; margin-bottom: 15px !important; font-size: 13px !important; }
+                    .resultBox { padding: 12px !important; }
+                    .resultBox p { font-size: 13px !important; margin: 8px 0 !important; }
+
+                    .tabContainer { gap: 5px !important; margin-bottom: 20px !important; }
+                    .tabBtn { padding: 8px 12px !important; font-size: 12px !important; }
+
+                    .footer { font-size: 11px !important; padding: 15px !important; margin-top: 30px !important; }
+                }
+
+                @media (max-width: 480px) {
+                    .logo { font-size: 14px !important; }
+                    .stats { grid-template-columns: 1fr !important; }
+                    .taskFilter { flex-direction: column !important; }
+                    .filterBtn { width: 100%; padding: 10px !important; }
+                    .hero { padding: 20px 15px !important; }
+                    .hero h1 { font-size: 24px !important; }
+                    .h2 { font-size: 18px !important; }
+                    .taskHeader { flex-direction: column !important; }
+                    .taskStatus { align-self: flex-start !important; margin-top: 8px !important; }
+                    .input { width: 100%; padding: 10px 8px !important; }
+                    .submitBtn { width: 100%; padding: 10px 8px !important; }
+                    .container { padding: 10px 8px !important; }
+                    .tasksContainer { padding: 12px !important; }
+                    .formSection { padding: 12px 0 !important; }
+                    .tabContainer { flex-direction: column !important; }
+                    .tabBtn { width: 100%; border-bottom: none !important; border-right: 3px solid transparent !important; }
+                    .tabBtn.active { border-right-color: #667eea !important; }
+                    .hero h1 { line-height: 1.2 !important; }
+                    .statCard { padding: 15px !important; }
+                    .statNumber { font-size: 28px !important; }
+                }
+            `}</style>
+            <header style={styles.header} className="header">
+                <div style={{...styles.headerContent, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                    <div style={styles.logo} className="logo">🚀 PYHGOSHIFT</div>
+                    <button
+                        style={{display: 'none'}}
+                        className="hamburger"
+                        onClick={() => setMobileNavOpen(!mobileNavOpen)}
+                    >
+                        ☰
+                    </button>
+                    <nav style={{...styles.nav, ...(!mobileNavOpen && {display: 'flex'})}} className={`nav-desktop`}>
                         <a
                             style={{...styles.navLink, ...(currentSection === 'home' ? styles.navLinkActive : {})}}
                             onClick={() => setCurrentSection('home')}
@@ -263,29 +361,29 @@ export default function Dashboard() {
                 </div>
             </header>
 
-            <div style={styles.container}>
+            <div style={styles.container} className="container">
                 {currentSection === 'home' && (
                     <>
-                        <div style={styles.hero}>
-                            <h1 style={styles.h1}>PYHGOSHIFT 프로젝트</h1>
+                        <div style={styles.hero} className="hero">
+                            <h1 style={styles.h1} className="h1">PYHGOSHIFT 프로젝트</h1>
                             <p style={styles.heroP}>8명의 Executive와 6개 Division으로 구성된 AI 경영 시스템</p>
                             <p style={styles.smallP}>Executive System + Domain Management + Web Dashboard 통합</p>
                         </div>
 
-                        <div style={styles.stats}>
-                            <div style={styles.statCard}>
+                        <div style={styles.stats} className="stats">
+                            <div style={styles.statCard} className="statCard">
                                 <div style={styles.statNumber}>{total}</div>
                                 <div style={styles.statLabel}>전체 작업</div>
                             </div>
-                            <div style={styles.statCard}>
+                            <div style={styles.statCard} className="statCard">
                                 <div style={styles.statNumber}>{completed}</div>
                                 <div style={styles.statLabel}>완료된 작업</div>
                             </div>
-                            <div style={styles.statCard}>
+                            <div style={styles.statCard} className="statCard">
                                 <div style={styles.statNumber}>{inProgress}</div>
                                 <div style={styles.statLabel}>진행 중</div>
                             </div>
-                            <div style={styles.statCard}>
+                            <div style={styles.statCard} className="statCard">
                                 <div style={styles.statNumber}>{pending}</div>
                                 <div style={styles.statLabel}>대기 중</div>
                             </div>
@@ -294,13 +392,14 @@ export default function Dashboard() {
                 )}
 
                 {currentSection === 'tasks' && (
-                    <div style={styles.tasksContainer}>
-                        <h2 style={styles.h2}>프로젝트 작업 리스트</h2>
+                    <div style={styles.tasksContainer} className="tasksContainer">
+                        <h2 style={styles.h2} className="h2">프로젝트 작업 리스트</h2>
 
-                        <div style={styles.taskFilter}>
+                        <div style={styles.taskFilter} className="taskFilter">
                             {['all', 'pending', 'inprogress', 'completed'].map(filter => (
                                 <button
                                     key={filter}
+                                    className="filterBtn"
                                     style={{
                                         ...styles.filterBtn,
                                         ...(currentFilter === filter ? styles.filterBtnActive : {})
@@ -322,13 +421,13 @@ export default function Dashboard() {
                                 </div>
                             ) : (
                                 filtered.map(task => (
-                                    <div key={task.id} style={styles.taskItem}>
-                                        <div style={styles.taskHeader}>
+                                    <div key={task.id} style={styles.taskItem} className="taskItem">
+                                        <div style={styles.taskHeader} className="taskHeader">
                                             <div>
-                                                <div style={styles.taskTitle}>{task.title}</div>
-                                                <div style={styles.taskDescription}>{task.description}</div>
+                                                <div style={styles.taskTitle} className="taskTitle">{task.title}</div>
+                                                <div style={styles.taskDescription} className="taskDescription">{task.description}</div>
                                             </div>
-                                            <span style={{...styles.taskStatus, ...styles[getStatusClass(task.status)]}}>
+                                            <span style={{...styles.taskStatus, ...styles[getStatusClass(task.status)]}} className="taskStatus">
                                                 {getStatusLabel(task.status)}
                                             </span>
                                         </div>
@@ -344,8 +443,8 @@ export default function Dashboard() {
                 )}
 
                 {currentSection === 'stats' && (
-                    <div style={styles.tasksContainer}>
-                        <h2 style={styles.h2}>프로젝트 진행률</h2>
+                    <div style={styles.tasksContainer} className="tasksContainer">
+                        <h2 style={styles.h2} className="h2">프로젝트 진행률</h2>
 
                         <div style={{marginBottom: '30px'}}>
                             <h3 style={styles.phaseTitle}>Phase 1: 초기 통합</h3>
@@ -374,32 +473,38 @@ export default function Dashboard() {
                 )}
 
                 {currentSection === 'domain' && (
-                    <div style={styles.tasksContainer}>
-                        <h2 style={styles.h2}>도메인 관리</h2>
-                        {message && <div style={styles.messageBox}>{message}</div>}
+                    <div style={styles.tasksContainer} className="tasksContainer">
+                        <h2 style={styles.h2} className="h2">도메인 관리</h2>
+                        {message && <div style={styles.messageBox} className="messageBox">{message}</div>}
 
-                        <div style={styles.tabContainer}>
-                            <button style={{...styles.tabBtn, ...styles.tabBtnActive}}>도메인 등록</button>
-                            <button style={styles.tabBtn}>도메인 조회</button>
-                            <button style={styles.tabBtn}>도메인 리스트</button>
-                            <button style={styles.tabBtn}>DNS 관리</button>
+                        <div style={styles.tabContainer} className="tabContainer">
+                            <button style={{...styles.tabBtn, ...styles.tabBtnActive}} className="tabBtn active">도메인 등록</button>
+                            <button style={styles.tabBtn} className="tabBtn">도메인 조회</button>
+                            <button style={styles.tabBtn} className="tabBtn">도메인 리스트</button>
+                            <button style={styles.tabBtn} className="tabBtn">DNS 관리</button>
                         </div>
 
-                        <div style={styles.formSection}>
-                            <h3 style={styles.subTitle}>새 도메인 등록</h3>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>도메인명</label>
+                        <div style={styles.formSection} className="formSection">
+                            <h3 style={styles.subTitle} className="subTitle">새 도메인 등록</h3>
+                            <div style={styles.formGroup} className="formGroup">
+                                <label style={styles.label} className="label">도메인명</label>
                                 <input
                                     type="text"
                                     value={domainName}
                                     onChange={(e) => setDomainName(e.target.value)}
                                     placeholder="example"
                                     style={styles.input}
+                                    className="input"
                                 />
                             </div>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>확장자</label>
-                                <select value={extension} onChange={(e) => setExtension(e.target.value)} style={styles.input}>
+                            <div style={styles.formGroup} className="formGroup">
+                                <label style={styles.label} className="label">확장자</label>
+                                <select
+                                    value={extension}
+                                    onChange={(e) => setExtension(e.target.value)}
+                                    style={styles.input}
+                                    className="input"
+                                >
                                     <option value=".dpdns.org">.dpdns.org</option>
                                     <option value=".us.kg">.us.kg</option>
                                     <option value=".qzz.io">.qzz.io</option>
@@ -407,28 +512,29 @@ export default function Dashboard() {
                                     <option value=".qd.je">.qd.je</option>
                                 </select>
                             </div>
-                            <button style={styles.submitBtn} onClick={() => registerDomain()}>
+                            <button style={styles.submitBtn} className="submitBtn" onClick={() => registerDomain()}>
                                 {loading ? '등록 중...' : '도메인 등록'}
                             </button>
                         </div>
 
-                        <div style={styles.formSection}>
-                            <h3 style={styles.subTitle}>도메인 조회</h3>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>도메인명</label>
+                        <div style={styles.formSection} className="formSection">
+                            <h3 style={styles.subTitle} className="subTitle">도메인 조회</h3>
+                            <div style={styles.formGroup} className="formGroup">
+                                <label style={styles.label} className="label">도메인명</label>
                                 <input
                                     type="text"
                                     value={queryDomain}
                                     onChange={(e) => setQueryDomain(e.target.value)}
                                     placeholder="example.dpdns.org"
                                     style={styles.input}
+                                    className="input"
                                 />
                             </div>
-                            <button style={styles.submitBtn} onClick={() => queryDomainInfo()}>
+                            <button style={styles.submitBtn} className="submitBtn" onClick={() => queryDomainInfo()}>
                                 {loading ? '조회 중...' : '조회'}
                             </button>
                             {queryResult && (
-                                <div style={styles.resultBox}>
+                                <div style={styles.resultBox} className="resultBox">
                                     <p><strong>도메인:</strong> {queryResult.domain}</p>
                                     <p><strong>상태:</strong> {queryResult.status}</p>
                                     <p><strong>등록일:</strong> {queryResult.registration_date}</p>
@@ -437,17 +543,17 @@ export default function Dashboard() {
                             )}
                         </div>
 
-                        <div style={styles.formSection}>
-                            <h3 style={styles.subTitle}>내 도메인 목록</h3>
-                            <button style={styles.submitBtn} onClick={() => loadDomains()}>
+                        <div style={styles.formSection} className="formSection">
+                            <h3 style={styles.subTitle} className="subTitle">내 도메인 목록</h3>
+                            <button style={styles.submitBtn} className="submitBtn" onClick={() => loadDomains()}>
                                 {loading ? '로드 중...' : '도메인 새로고침'}
                             </button>
                             {domains.length > 0 ? (
-                                <div style={styles.domainList}>
+                                <div style={styles.domainList} className="domainList">
                                     {domains.map((domain, idx) => (
-                                        <div key={idx} style={styles.domainItem}>
-                                            <div style={styles.domainName}>{domain.name}</div>
-                                            <div style={styles.domainMeta}>
+                                        <div key={idx} style={styles.domainItem} className="domainItem">
+                                            <div style={styles.domainName} className="domainName">{domain.name}</div>
+                                            <div style={styles.domainMeta} className="domainMeta">
                                                 <span>등록일: {domain.registration_date}</span>
                                                 <span>만료일: {domain.expiry_date}</span>
                                             </div>
@@ -462,31 +568,32 @@ export default function Dashboard() {
                 )}
 
                 {currentSection === 'pdfcourse' && (
-                    <div style={styles.tasksContainer}>
-                        <h2 style={styles.h2}>PDF 강좌 생성</h2>
-                        {message && <div style={styles.messageBox}>{message}</div>}
+                    <div style={styles.tasksContainer} className="tasksContainer">
+                        <h2 style={styles.h2} className="h2">PDF 강좌 생성</h2>
+                        {message && <div style={styles.messageBox} className="messageBox">{message}</div>}
 
-                        <div style={styles.formSection}>
-                            <h3 style={styles.subTitle}>PDF 업로드</h3>
-                            <div style={styles.formGroup}>
-                                <label style={styles.label}>PDF 파일</label>
+                        <div style={styles.formSection} className="formSection">
+                            <h3 style={styles.subTitle} className="subTitle">PDF 업로드</h3>
+                            <div style={styles.formGroup} className="formGroup">
+                                <label style={styles.label} className="label">PDF 파일</label>
                                 <input
                                     type="file"
                                     accept=".pdf"
                                     onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
                                     style={{...styles.input, padding: '10px'}}
+                                    className="input"
                                 />
                                 {pdfFile && <p style={{fontSize: '12px', color: '#666', marginTop: '8px'}}>선택됨: {pdfFile.name}</p>}
                             </div>
-                            <button style={styles.submitBtn} onClick={() => generateCourseFromPDF()}>
+                            <button style={styles.submitBtn} className="submitBtn" onClick={() => generateCourseFromPDF()}>
                                 {courseLoading ? '생성 중...' : '강좌 생성'}
                             </button>
                         </div>
 
                         {generatedCourse && (
-                            <div style={styles.formSection}>
-                                <h3 style={styles.subTitle}>생성된 강좌</h3>
-                                <div style={styles.resultBox}>
+                            <div style={styles.formSection} className="formSection">
+                                <h3 style={styles.subTitle} className="subTitle">생성된 강좌</h3>
+                                <div style={styles.resultBox} className="resultBox">
                                     <h4 style={{marginTop: 0}}>{generatedCourse.title}</h4>
                                     <p>{generatedCourse.description}</p>
 
@@ -524,7 +631,7 @@ export default function Dashboard() {
                 )}
             </div>
 
-            <footer style={styles.footer}>
+            <footer style={styles.footer} className="footer">
                 <p>© 2026 PYHGOSHIFT Project. All rights reserved.</p>
                 <p style={{fontSize: '12px', marginTop: '10px'}}>FreeDomain으로 제공됨</p>
             </footer>
@@ -793,7 +900,6 @@ const styles = {
         color: '#333',
         marginBottom: '20px',
         margin: 0,
-        marginBottom: '20px',
     },
     formGroup: {
         marginBottom: '15px',
