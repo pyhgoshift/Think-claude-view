@@ -67,7 +67,7 @@ const tasksData = [
     }
 ];
 
-const BACKEND_API = process.env.NEXT_PUBLIC_BACKEND_API || 'http://localhost:5000';
+const BACKEND_API = process.env.NEXT_PUBLIC_BACKEND_API || 'http://localhost:8788';
 
 export default function Dashboard() {
     const [currentSection, setCurrentSection] = useState('home');
@@ -80,6 +80,9 @@ export default function Dashboard() {
     const [dnsRecords, setDnsRecords] = useState([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
+    const [pdfFile, setPdfFile] = useState(null);
+    const [generatedCourse, setGeneratedCourse] = useState(null);
+    const [courseLoading, setCourseLoading] = useState(false);
 
     const total = tasksData.length;
     const completed = tasksData.filter(t => t.status === 'completed').length;
@@ -187,6 +190,36 @@ export default function Dashboard() {
         }
     };
 
+    const generateCourseFromPDF = async () => {
+        if (!pdfFile) {
+            setMessage('PDF 파일을 선택해주세요.');
+            return;
+        }
+        setCourseLoading(true);
+        setMessage('');
+        try {
+            const formData = new FormData();
+            formData.append('file', pdfFile);
+
+            const response = await fetch(`${BACKEND_API}/api/pdf/generate-course`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+            if (data.status === 'success') {
+                setGeneratedCourse(data.course);
+                setMessage('강좌 생성 완료!');
+                setPdfFile(null);
+            } else {
+                setMessage(`오류: ${data.error?.message || '생성 실패'}`);
+            }
+        } catch (error) {
+            setMessage(`연결 오류: ${error.message}`);
+        } finally {
+            setCourseLoading(false);
+        }
+    };
+
     return (
         <div style={styles.body}>
             <header style={styles.header}>
@@ -219,6 +252,12 @@ export default function Dashboard() {
                             }}
                         >
                             도메인 관리
+                        </a>
+                        <a
+                            style={{...styles.navLink, ...(currentSection === 'pdfcourse' ? styles.navLinkActive : {})}}
+                            onClick={() => setCurrentSection('pdfcourse')}
+                        >
+                            PDF 강좌
                         </a>
                     </nav>
                 </div>
@@ -419,6 +458,68 @@ export default function Dashboard() {
                                 <p style={styles.emptyMessage}>등록된 도메인이 없습니다.</p>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {currentSection === 'pdfcourse' && (
+                    <div style={styles.tasksContainer}>
+                        <h2 style={styles.h2}>PDF 강좌 생성</h2>
+                        {message && <div style={styles.messageBox}>{message}</div>}
+
+                        <div style={styles.formSection}>
+                            <h3 style={styles.subTitle}>PDF 업로드</h3>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>PDF 파일</label>
+                                <input
+                                    type="file"
+                                    accept=".pdf"
+                                    onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+                                    style={{...styles.input, padding: '10px'}}
+                                />
+                                {pdfFile && <p style={{fontSize: '12px', color: '#666', marginTop: '8px'}}>선택됨: {pdfFile.name}</p>}
+                            </div>
+                            <button style={styles.submitBtn} onClick={() => generateCourseFromPDF()}>
+                                {courseLoading ? '생성 중...' : '강좌 생성'}
+                            </button>
+                        </div>
+
+                        {generatedCourse && (
+                            <div style={styles.formSection}>
+                                <h3 style={styles.subTitle}>생성된 강좌</h3>
+                                <div style={styles.resultBox}>
+                                    <h4 style={{marginTop: 0}}>{generatedCourse.title}</h4>
+                                    <p>{generatedCourse.description}</p>
+
+                                    {generatedCourse.modules && generatedCourse.modules.length > 0 && (
+                                        <div style={{marginTop: '20px'}}>
+                                            <h5 style={{fontSize: '14px', fontWeight: '600', marginBottom: '10px'}}>모듈</h5>
+                                            {generatedCourse.modules.map((module, idx) => (
+                                                <div key={idx} style={{
+                                                    padding: '12px',
+                                                    background: '#f0f0f0',
+                                                    borderRadius: '6px',
+                                                    marginBottom: '10px'
+                                                }}>
+                                                    <strong>{module.title}</strong>
+                                                    <p style={{fontSize: '12px', color: '#666', margin: '5px 0 0 0'}}>
+                                                        {module.description}
+                                                    </p>
+                                                    {module.lessons && module.lessons.length > 0 && (
+                                                        <div style={{marginTop: '8px', paddingLeft: '12px', borderLeft: '2px solid #667eea'}}>
+                                                            {module.lessons.map((lesson, lidx) => (
+                                                                <div key={lidx} style={{fontSize: '12px', marginBottom: '4px'}}>
+                                                                    • {lesson.title}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
