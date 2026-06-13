@@ -301,6 +301,16 @@ export default function Dashboard() {
                     .hamburgerBtn { display: none !important; }
                     .nav-desktop { display: flex !important; }
                 }
+
+                .statCard:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2) !important;
+                    background: #f0f3ff !important;
+                }
+
+                .statCard:active {
+                    transform: translateY(-2px);
+                }
             `}</style>
             <header style={styles.header} className="header">
                 <div style={{...styles.headerContent, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
@@ -360,22 +370,38 @@ export default function Dashboard() {
                         </div>
 
                         <div style={styles.stats} className="stats">
-                            <div style={styles.statCard} className="statCard">
+                            <button
+                                style={{...styles.statCard, ...styles.statCardButton}}
+                                className="statCard"
+                                onClick={() => { setCurrentSection('tasks'); setCurrentFilter('all'); setMobileNavOpen(false); }}
+                            >
                                 <div style={styles.statNumber}>{total}</div>
                                 <div style={styles.statLabel}>전체 작업</div>
-                            </div>
-                            <div style={styles.statCard} className="statCard">
+                            </button>
+                            <button
+                                style={{...styles.statCard, ...styles.statCardButton}}
+                                className="statCard"
+                                onClick={() => { setCurrentSection('tasks'); setCurrentFilter('completed'); setMobileNavOpen(false); }}
+                            >
                                 <div style={styles.statNumber}>{completed}</div>
                                 <div style={styles.statLabel}>완료된 작업</div>
-                            </div>
-                            <div style={styles.statCard} className="statCard">
+                            </button>
+                            <button
+                                style={{...styles.statCard, ...styles.statCardButton}}
+                                className="statCard"
+                                onClick={() => { setCurrentSection('tasks'); setCurrentFilter('inprogress'); setMobileNavOpen(false); }}
+                            >
                                 <div style={styles.statNumber}>{inProgress}</div>
                                 <div style={styles.statLabel}>진행 중</div>
-                            </div>
-                            <div style={styles.statCard} className="statCard">
+                            </button>
+                            <button
+                                style={{...styles.statCard, ...styles.statCardButton}}
+                                className="statCard"
+                                onClick={() => { setCurrentSection('tasks'); setCurrentFilter('pending'); setMobileNavOpen(false); }}
+                            >
                                 <div style={styles.statNumber}>{pending}</div>
                                 <div style={styles.statLabel}>대기 중</div>
-                            </div>
+                            </button>
                         </div>
                     </>
                 )}
@@ -722,6 +748,11 @@ const styles = {
         padding: '20px',
         borderRadius: '8px',
         textAlign: 'center',
+    },
+    statCardButton: {
+        border: 'none',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
     },
     statNumber: {
         fontSize: '32px',
