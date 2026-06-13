@@ -228,28 +228,12 @@ export default function Dashboard() {
                     body { margin: 0; padding: 0; }
 
                     .header { padding: 15px 0 !important; }
-                    .navbar { display: flex !important; justify-content: space-between !important; align-items: center !important; }
+                    .hamburgerBtn { display: block !important; background: none; border: none; font-size: 24px; cursor: pointer; color: #667eea; padding: 8px; }
                     .logo { font-size: 18px !important; }
-                    .nav-desktop { display: none !important; }
-                    .nav-mobile { display: block !important; }
-                    .hamburger { background: none; border: none; font-size: 24px; cursor: pointer; color: #667eea; }
+                    .nav-desktop { display: none !important; position: absolute; top: 60px; left: 0; right: 0; background: white; border-bottom: 1px solid #eee; flex-direction: column !important; gap: 0 !important; width: 100%; }
+                    .nav-desktop.open { display: flex !important; }
+                    .nav-desktop a { padding: 12px 20px !important; border-bottom: 1px solid #f0f0f0; width: 100%; box-sizing: border-box; }
 
-                    .nav-menu {
-                        position: absolute;
-                        top: 60px;
-                        left: 0;
-                        right: 0;
-                        background: white;
-                        border-bottom: 1px solid #eee;
-                        flex-direction: column !important;
-                        gap: 0 !important;
-                        max-height: 0;
-                        overflow: hidden;
-                        transition: max-height 0.3s ease;
-                    }
-
-                    .nav-menu.open { max-height: 500px; }
-                    .nav-menu a { padding: 12px 20px !important; border-bottom: 1px solid #f0f0f0; }
 
                     .container { padding: 15px 10px !important; margin: 0 auto !important; }
                     .stats { grid-template-columns: 1fr 1fr !important; gap: 15px !important; }
@@ -312,33 +296,37 @@ export default function Dashboard() {
                     .statCard { padding: 15px !important; }
                     .statNumber { font-size: 28px !important; }
                 }
+
+                @media (min-width: 769px) {
+                    .hamburgerBtn { display: none !important; }
+                    .nav-desktop { display: flex !important; }
+                }
             `}</style>
             <header style={styles.header} className="header">
                 <div style={{...styles.headerContent, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                     <div style={styles.logo} className="logo">🚀 PYHGOSHIFT</div>
                     <button
-                        style={{display: 'none'}}
-                        className="hamburger"
+                        className="hamburgerBtn"
                         onClick={() => setMobileNavOpen(!mobileNavOpen)}
                     >
                         ☰
                     </button>
-                    <nav style={{...styles.nav, ...(!mobileNavOpen && {display: 'flex'})}} className={`nav-desktop`}>
+                    <nav style={{...styles.nav}} className={`nav-desktop ${mobileNavOpen ? 'open' : ''}`}>
                         <a
                             style={{...styles.navLink, ...(currentSection === 'home' ? styles.navLinkActive : {})}}
-                            onClick={() => setCurrentSection('home')}
+                            onClick={() => { setCurrentSection('home'); setMobileNavOpen(false); }}
                         >
                             홈
                         </a>
                         <a
                             style={{...styles.navLink, ...(currentSection === 'tasks' ? styles.navLinkActive : {})}}
-                            onClick={() => setCurrentSection('tasks')}
+                            onClick={() => { setCurrentSection('tasks'); setMobileNavOpen(false); }}
                         >
                             작업 리스트
                         </a>
                         <a
                             style={{...styles.navLink, ...(currentSection === 'stats' ? styles.navLinkActive : {})}}
-                            onClick={() => setCurrentSection('stats')}
+                            onClick={() => { setCurrentSection('stats'); setMobileNavOpen(false); }}
                         >
                             통계
                         </a>
@@ -347,13 +335,14 @@ export default function Dashboard() {
                             onClick={() => {
                                 setCurrentSection('domain');
                                 loadDomains();
+                                setMobileNavOpen(false);
                             }}
                         >
                             도메인 관리
                         </a>
                         <a
                             style={{...styles.navLink, ...(currentSection === 'pdfcourse' ? styles.navLinkActive : {})}}
-                            onClick={() => setCurrentSection('pdfcourse')}
+                            onClick={() => { setCurrentSection('pdfcourse'); setMobileNavOpen(false); }}
                         >
                             PDF 강좌
                         </a>
